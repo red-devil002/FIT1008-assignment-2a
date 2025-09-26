@@ -10,15 +10,20 @@ class Transaction:
     
     def sign(self):
         """
-        Analyse your time complexity of this method.
+        M = Length of str_bytes_notes
+        Best: O(M)
+        worst: O(M)
+
+        Reason:
+           Depend on the length of the transaction details string.   
         """
         ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz"
 
         # Adding transaction details into str
-        str_bytes_notes = str(self.timestamp) + "|" + self.from_user + "|" + self.to_user
+        mySw_str_bytes_notes = str(self.timestamp) + "|" + self.from_user + "|" + self.to_user
 
         swe_trns_seed = 0x1f123bb5a7c94d3f # Random seed
-        for ch in str_bytes_notes:
+        for ch in mySw_str_bytes_notes:
             swe_trns_seed = (swe_trns_seed * 131) ^ ord(ch)
             swe_trns_seed = swe_trns_seed + 17
 
@@ -43,9 +48,8 @@ class Transaction:
 class ProcessingLine:
     def __init__(self, critical_transaction):
         """
-        Analyse your time complexity of this method.
+        Best and worst are both O(1) because we are just initializing variables.
         """
-
         # Variables for the ProcessingLine task.
         self.critical_transaction = critical_transaction
         self.Queue_for_left = LinkedQueue()
@@ -54,8 +58,10 @@ class ProcessingLine:
 
     def add_transaction(self, transaction):
         """
-        Analyse your time complexity of this method.
+        Best and worst are both O(1) because we are comparing timestamps and adding to either a queue or stack.
         """
+
+        # condiitions for transaction placement
         if transaction.timestamp <= self.critical_transaction.timestamp:
             self.Queue_for_left.append(transaction)
         elif transaction.timestamp > self.critical_transaction.timestamp:
@@ -69,6 +75,7 @@ class ProcessingLine:
         self._fixed_pointer = True
         return LineIterator(self)
 
+# Helper iterator class for ProcessingLine
 class LineIterator:
     def __init__(self, pointer1):
         self.pointer1 = pointer1

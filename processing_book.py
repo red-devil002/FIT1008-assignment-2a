@@ -5,8 +5,15 @@ from processing_line import Transaction
 class ProcessingBook:
     LEGAL_CHARACTERS = "abcdefghijklmnopqrstuvwxyz0123456789"
 
-    def __init__(self):
+    def __init__(self, level=0, root=None):
         self.pages = ArrayR(len(ProcessingBook.LEGAL_CHARACTERS))
+        self._size = 0 # 2.3 Task
+        self.error_count = 0
+        self.level = level
+        if root is None:
+            self._root = self
+        else:
+            self._root = root
     
     def page_index(self, character):
         """
@@ -19,10 +26,65 @@ class ProcessingBook:
         """
         Returns the number of errors encountered while storing transactions.
         """
-        pass
+        return self._root.error_count
+    
+    # Task 2.1 Methods.
+    def __setitem__(self, transactions: Transaction, amount: int) -> None:
+        mySw_sig = transactions.signature
+        self._insert(mySw_sig, transactions, amount, self.level)
+
+    def _insert(self, mySw_sig, transactions: Transaction, amount: int, i: int) -> None:
+        mySw_indexs_check = self.page_index(mySw_sig[i])
+        mySw_acc_slot = self.pages[mySw_indexs_check]
+        
+        if isinstance(mySw_acc_slot, tuple) and mySw_acc_slot[0] == "L":
+            _, old_tx, old_amt, old_sig = mySw_acc_slot
+            if old_sig == mySw_sig:
+                # print("Debug 1")
+                if old_amt == amount:
+                    # print("Debug 2")
+                    return
+                self._root.error_count += 1
+                raise ValueError("Updating existing transaction amount is forbidden")
+            # Recursion case
+            twist = ProcessingBook(level=i + 1, root=self._root)
+            self.pages[mySw_indexs_check] = twist
+            twist._insert(old_sig, old_tx, old_amt, i + 1)
+            twist._insert(mySw_sig, transactions, amount, i + 1)
+            return
+        
+        if mySw_acc_slot is None:
+            self.pages[mySw_indexs_check] = ("L", transactions, amount, mySw_sig)
+            self._size += 1
+            return
+        
+        gmae = mySw_acc_slot
+        gmae._insert(mySw_sig, transactions, amount, i + 1)
+        self._size += 1
+
+    def __getitem__(self, transactions: Transaction) -> int:
+        mySw_sign = transactions.signature
+        return self._find(mySw_sign, self.level)
+
+    def _find(self, mySw_sig, i: int) -> int:
+        mySw_indexs_check = self.page_index(mySw_sig[i])
+        mySw_acc_slot = self.pages[mySw_indexs_check]
+
+        if mySw_acc_slot is None:
+            raise KeyError("Transaction not found")
+        
+        # print("Check 1")
+        if isinstance(mySw_acc_slot, tuple) and mySw_acc_slot[0] == "L":
+            # print("Check 2")
+            if mySw_acc_slot[3] == mySw_sig:
+                # print("Check 3")
+                return mySw_acc_slot[2] 
+            raise KeyError("Transaction not found")
+
+        return mySw_acc_slot._find(mySw_sig, i + 1)
     
     def __len__(self):
-        pass
+        return self._size
     
     def sample(self, required_size):
         """
